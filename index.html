@@ -2,7 +2,7 @@
 <html lang="en">
 <head>
   <meta charset="UTF-8" />
-  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0" />
   <title>Santa Tracker PH – Viral Phone Edition 🎅📱</title>
   <link rel="stylesheet" href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css" />
   <style>
@@ -77,7 +77,7 @@
 
   <div class="toast" id="toast">Pabili ka sa mama mo! 😂🎁</div>
 
-  <audio id="music" loop autoplay>
+  <audio id="music" loop autoplay playsinline>
     <source src="https://cdn.pixabay.com/download/audio/2022/12/15/audio_7b3a96e7f1.mp3" type="audio/mpeg" />
   </audio>
   <audio id="hoho" playsinline>
@@ -90,10 +90,11 @@
     L.control.zoom({ position: 'bottomright' }).addTo(map);
     L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png', { attribution: '© OpenStreetMap contributors' }).addTo(map);
 
+    // Working Santa Icon
     const santaIcon = L.icon({
-      iconUrl: 'https://cdn-icons-png.flaticon.com/512/1339/13393973.png', // Santa sled icon
-      iconSize: [48, 48],
-      iconAnchor: [24, 24]
+      iconUrl: 'https://gallery.yopriceville.com/var/albums/Free-Clipart-Pictures/Christmas-PNG/Transparent_Santa_Claus-with_Sled.png?m=1629785341',
+      iconSize: [64, 64],
+      iconAnchor: [32, 32]
     });
 
     let santaMarker = L.marker([12.8797, 121.7740], { icon: santaIcon }).addTo(map).bindPopup('🎅 Santa is VERY close!');
@@ -121,64 +122,26 @@
       });
     }
 
-    function generateETA() { 
-      const now = new Date(); 
-      const future = new Date(now.getTime() + Math.random() * 4 * 60 * 60 * 1000); 
-      eta.innerText = future.toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' }); 
-    }
+    function generateETA() { const now = new Date(); const future = new Date(now.getTime() + Math.random() * 4 * 60 * 60 * 1000); eta.innerText = future.toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' }); }
+    let score = 0; function addPoints() { score += Math.floor(Math.random() * 6) + 1; if(score>20) showToast('🌟 Santa is SUPER proud of you!'); document.getElementById('score').innerText = `Score: ${score}`; }
 
-    let score = 0; 
-    function addPoints() { 
-      score += Math.floor(Math.random() * 6) + 1; 
-      if(score > 20) showToast('🌟 Santa is SUPER proud of you!'); 
-      document.getElementById('score').innerText = `Score: ${score}`; 
-    }
-
-    const quotes = ['Mabait ka ngayong taon. Proud si Santa sayo!', 'Your kindness is the real gift 🎁', 'You made people smile this year 😊', 'Hindi lahat nakikita, pero ramdam ang kabutihan mo.'];
+    const quotes = ['Mabait ka ngayong taon. Proud si Santa sayo!','Your kindness is the real gift 🎁','You made people smile this year 😊','Hindi lahat nakikita, pero ramdam ang kabutihan mo.'];
     function newQuote() { quote.innerText = quotes[Math.floor(Math.random() * quotes.length)]; }
 
-    function updateCountdown() { 
-      const now = new Date(); 
-      const midnight = new Date(); 
-      midnight.setHours(24,0,0,0); 
-      const diff = midnight - now; 
-      const h = Math.floor(diff / 3600000); 
-      const m = Math.floor((diff % 3600000) / 60000); 
-      countdown.innerText = `${h}h ${m}m left`; 
-    }
+    function updateCountdown() { const now = new Date(); const midnight = new Date(); midnight.setHours(24,0,0,0); const diff = midnight - now; const h = Math.floor(diff / 3600000); const m = Math.floor((diff % 3600000) / 60000); countdown.innerText = `${h}h ${m}m left`; }
 
-    const music = document.getElementById('music'); 
-    const ho = document.getElementById('hoho');
-
+    const music = document.getElementById('music'); const ho = document.getElementById('hoho');
+    function tryAutoplay() { music.volume = 0.6; music.play().catch(()=>showToast('🔊 Tap Music to enable sound')); }
     function toggleMusic() { music.paused ? music.play() : music.pause(); }
     function hohoho() { ho.play(); }
     function robuxPrank() { showToast('Pabili ka sa mama mo! 😂'); hohoho(); }
-    function showToast(msg) { 
-      const t = document.getElementById('toast'); 
-      t.innerText = msg; 
-      t.style.display = 'block'; 
-      setTimeout(()=>t.style.display='none',3500); 
-    }
-    function copyLink() { 
-      navigator.clipboard.writeText(location.href); 
-      showToast('🎄 Link copied!'); 
-    }
+    function showToast(msg) { const t=document.getElementById('toast'); t.innerText=msg; t.style.display='block'; setTimeout(()=>t.style.display='none',3500); }
+    function copyLink() { navigator.clipboard.writeText(location.href); showToast('🎄 Link copied!'); }
 
-    function snow() { 
-      const s = document.createElement('div'); 
-      s.className='snowflake'; 
-      s.style.left = Math.random()*100+'vw'; 
-      s.style.animationDuration = 4+Math.random()*5+'s'; 
-      s.innerText='❄'; 
-      document.body.appendChild(s); 
-      setTimeout(()=>s.remove(),9000); 
-    }
+    function snow() { const s=document.createElement('div'); s.className='snowflake'; s.style.left=Math.random()*100+'vw'; s.style.animationDuration=4+Math.random()*5+'s'; s.innerText='❄'; document.body.appendChild(s); setTimeout(()=>s.remove(),9000); }
     setInterval(snow,260);
 
-    generateETA(); 
-    newQuote(); 
-    updateCountdown(); 
-    setInterval(updateCountdown,60000);
+    generateETA(); newQuote(); updateCountdown(); setInterval(updateCountdown,60000); tryAutoplay();
   </script>
 </body>
 </html>
