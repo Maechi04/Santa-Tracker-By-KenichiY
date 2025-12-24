@@ -3,7 +3,7 @@
 <head>
   <meta charset="UTF-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-  <title>Santa Tracker PH – Magical Edition 🎅✨</title>
+  <title>Santa Tracker PH – Ultimate Fun Edition 🎅✨</title>
   <link rel="stylesheet" href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css" />
   <style>
     body {
@@ -11,16 +11,14 @@
       font-family: system-ui, -apple-system, Segoe UI, Roboto, sans-serif;
       background: radial-gradient(circle at top, #123 0%, #08162d 60%);
       color: #fff;
+      overflow-x: hidden;
     }
     header {
       padding: 16px;
       text-align: center;
       background: linear-gradient(135deg, #c1121f, #780000);
     }
-    header h1 { margin: 0; font-size: 1.5rem; }
-    header p { margin: 6px 0 0; font-size: 0.95rem; opacity: 0.95; }
-
-    #map { height: 55vh; width: 100%; }
+    #map { height: 50vh; width: 100%; }
 
     .panel {
       padding: 14px;
@@ -31,7 +29,7 @@
 
     .card {
       background: rgba(255,255,255,0.08);
-      border-radius: 14px;
+      border-radius: 16px;
       padding: 14px;
       text-align: center;
       box-shadow: 0 10px 20px rgba(0,0,0,0.25);
@@ -58,13 +56,40 @@
       background: #08162d;
     }
 
-    .quote { font-style: italic; opacity: 0.95; }
+    .quote { font-style: italic; }
+
+    /* Snow */
+    .snowflake {
+      position: fixed;
+      top: -10px;
+      color: white;
+      font-size: 1em;
+      animation: fall linear infinite;
+      z-index: 9999;
+    }
+
+    @keyframes fall {
+      to { transform: translateY(110vh); }
+    }
+
+    /* Popup */
+    .popup {
+      position: fixed;
+      bottom: 20px;
+      right: 20px;
+      background: #198754;
+      padding: 14px 18px;
+      border-radius: 12px;
+      box-shadow: 0 10px 20px rgba(0,0,0,0.4);
+      display: none;
+      z-index: 10000;
+    }
   </style>
 </head>
 <body>
   <header>
-    <h1>🎅 Santa Tracker – Magical PH Edition</h1>
-    <p>Santa is near YOU! Interactive, fun, and just for joy 🎁</p>
+    <h1>🎅 Santa Tracker – PH Ultimate Edition</h1>
+    <p id="subtitle">Santa is nearby! You’ve been good this year 🎁</p>
   </header>
 
   <div id="map"></div>
@@ -72,44 +97,53 @@
   <section class="panel">
     <div class="card">
       <h3>🎁 Gift ETA</h3>
-      <p id="eta">Calculating magic...</p>
-      <button onclick="generateETA()">Regenerate ETA</button>
+      <p id="eta"></p>
+      <button onclick="generateETA()">New ETA</button>
     </div>
 
     <div class="card">
-      <h3>🌟 Good Kid Meter</h3>
+      <h3>🌟 Good Kid Game</h3>
       <p id="score">Score: 0</p>
-      <button class="secondary" onclick="addPoints()">Be Extra Nice</button>
+      <button class="secondary" onclick="addPoints()">Do a Good Deed</button>
     </div>
 
     <div class="card">
-      <h3>💬 Santa Says</h3>
+      <h3>💬 Santa Message</h3>
       <p id="quote" class="quote"></p>
       <button class="warn" onclick="newQuote()">New Message</button>
     </div>
 
     <div class="card">
-      <h3>🎶 Santa Sounds</h3>
+      <h3>🎄 Fun Controls</h3>
       <button onclick="toggleMusic()">Toggle Music</button><br /><br />
-      <button class="secondary" onclick="hohoho()">Ho Ho Ho!</button>
+      <button class="secondary" onclick="hohoho()">Ho Ho Ho!</button><br /><br />
+      <button class="warn" onclick="toggleLang()">EN / TL</button>
+    </div>
+
+    <div class="card">
+      <h3>⏳ Countdown</h3>
+      <p id="countdown"></p>
     </div>
   </section>
 
   <footer>
-    Share the magic with friends 🎄<br />
+    Spread the joy 🎄<br />
     <button onclick="copyLink()">Copy Shareable Link</button>
   </footer>
 
+  <div class="popup" id="popup">🎁 Knock knock! Santa is nearby!</div>
+
   <audio id="music" loop>
-    <source src="https://cdn.pixabay.com/download/audio/2022/12/15/audio_7b3a96e7f1.mp3?filename=christmas-village-126868.mp3" type="audio/mpeg" />
+    <source src="https://cdn.pixabay.com/download/audio/2022/12/15/audio_7b3a96e7f1.mp3" type="audio/mpeg" />
   </audio>
 
   <audio id="hoho">
-    <source src="https://cdn.pixabay.com/download/audio/2021/12/22/audio_3e3b9b1c7d.mp3?filename=santa-ho-ho-ho-12469.mp3" type="audio/mpeg" />
+    <source src="https://cdn.pixabay.com/download/audio/2021/12/22/audio_3e3b9b1c7d.mp3" type="audio/mpeg" />
   </audio>
 
   <script src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js"></script>
   <script>
+    /* MAP */
     const map = L.map('map').setView([12.8797, 121.7740], 6);
     L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png', {
       attribution: '© OpenStreetMap contributors'
@@ -123,64 +157,110 @@
 
     let santaMarker = L.marker([12.8797, 121.7740], { icon: santaIcon })
       .addTo(map)
-      .bindPopup('🎅 Santa is close to you!');
-
-    function moveNearUser(lat, lng) {
-      const offset = () => (Math.random() - 0.5) * 0.1;
-      const newLat = lat + offset();
-      const newLng = lng + offset();
-      santaMarker.setLatLng([newLat, newLng]);
-      map.setView([newLat, newLng], 13);
-      santaMarker.openPopup();
-    }
+      .bindPopup('🎅 Santa is nearby!');
 
     if (navigator.geolocation) {
       navigator.geolocation.getCurrentPosition(pos => {
         moveNearUser(pos.coords.latitude, pos.coords.longitude);
-      }, () => {
-        // fallback PH center
       });
     }
 
-    function generateETA() {
-      const now = new Date();
-      const future = new Date(now.getTime() + Math.random() * (6 * 60 * 60 * 1000));
-      document.getElementById('eta').innerText = future.toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' });
+    function moveNearUser(lat, lng) {
+      const offset = () => (Math.random() - 0.5) * 0.05;
+      const newLat = lat + offset();
+      const newLng = lng + offset();
+      santaMarker.setLatLng([newLat, newLng]);
+      map.setView([newLat, newLng], 14);
+      showPopup();
     }
 
+    /* ETA */
+    function generateETA() {
+      const now = new Date();
+      const future = new Date(now.getTime() + Math.random() * 5 * 60 * 60 * 1000);
+      eta.innerText = future.toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' });
+    }
+
+    /* GAME */
     let score = 0;
     function addPoints() {
       score += Math.floor(Math.random() * 5) + 1;
       document.getElementById('score').innerText = `Score: ${score}`;
     }
 
-    const quotes = [
-      "You’ve been kind, patient, and strong this year.",
-      "Santa is proud of how you never gave up.",
-      "Your good heart is your greatest gift.",
-      "You made the world better just by being you.",
-      "Kindness like yours never goes unnoticed."
+    /* QUOTES */
+    const quotesEN = [
+      'You’ve been kind and strong this year.',
+      'Santa is proud of your good heart.',
+      'Your kindness matters more than you know.'
     ];
+    const quotesTL = [
+      'Mabuti ang iyong puso ngayong taon.',
+      'Ipinagmamalaki ka ni Santa.',
+      'Ang kabutihan mo ay isang regalo.'
+    ];
+    let lang = 'EN';
 
     function newQuote() {
-      document.getElementById('quote').innerText = quotes[Math.floor(Math.random() * quotes.length)];
+      const q = lang === 'EN' ? quotesEN : quotesTL;
+      quote.innerText = q[Math.floor(Math.random() * q.length)];
     }
 
+    function toggleLang() {
+      lang = lang === 'EN' ? 'TL' : 'EN';
+      subtitle.innerText = lang === 'EN'
+        ? 'Santa is nearby! You’ve been good this year 🎁'
+        : 'Malapit na si Santa! Mabait ka ngayong taon 🎁';
+      newQuote();
+    }
+
+    /* COUNTDOWN */
+    function updateCountdown() {
+      const now = new Date();
+      const midnight = new Date();
+      midnight.setHours(24,0,0,0);
+      const diff = midnight - now;
+      const h = Math.floor(diff / 3600000);
+      const m = Math.floor((diff % 3600000) / 60000);
+      countdown.innerText = `${h}h ${m}m until Christmas magic`;
+    }
+
+    /* AUDIO */
     const music = document.getElementById('music');
     const ho = document.getElementById('hoho');
-    function toggleMusic() {
-      music.paused ? music.play() : music.pause();
-    }
+    function toggleMusic() { music.paused ? music.play() : music.pause(); }
     function hohoho() { ho.play(); }
 
+    /* SHARE */
     function copyLink() {
-      navigator.clipboard.writeText(window.location.href);
-      alert('🎄 Link copied! Spread the joy!');
+      navigator.clipboard.writeText(location.href);
+      alert('🎄 Link copied!');
     }
 
-    // Init
+    /* POPUP */
+    function showPopup() {
+      const p = document.getElementById('popup');
+      p.style.display = 'block';
+      setTimeout(() => p.style.display = 'none', 4000);
+    }
+
+    /* SNOW */
+    function snow() {
+      const s = document.createElement('div');
+      s.className = 'snowflake';
+      s.style.left = Math.random() * 100 + 'vw';
+      s.style.animationDuration = 5 + Math.random() * 5 + 's';
+      s.innerText = '❄';
+      document.body.appendChild(s);
+      setTimeout(() => s.remove(), 10000);
+    }
+    setInterval(snow, 300);
+
+    /* INIT */
     generateETA();
     newQuote();
+    updateCountdown();
+    setInterval(updateCountdown, 60000);
   </script>
 </body>
 </html>
