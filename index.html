@@ -16,7 +16,7 @@
     }
 
     header {
-      padding: 8px 10px; /* smaller header */
+      padding: 8px 10px;
       text-align: center;
       background: linear-gradient(135deg, #b1121f, #6b0000);
     }
@@ -34,7 +34,7 @@
     }
 
     #map {
-      height: 58vh; /* more map visibility */
+      height: 58vh;
       width: 100%;
     }
 
@@ -95,9 +95,7 @@
       pointer-events: none;
     }
 
-    @keyframes fall {
-      to { transform: translateY(110vh); }
-    }
+    @keyframes fall { to { transform: translateY(110vh); } }
 
     /* Toast / prank popup */
     .toast {
@@ -114,7 +112,6 @@
       font-size: 0.85rem;
     }
 
-    /* Desktop enhancement */
     @media (min-width: 768px) {
       #map { height: 52vh; }
       .panel { grid-template-columns: repeat(4, 1fr); }
@@ -178,31 +175,24 @@
   <audio id="music" loop playsinline>
     <source src="https://cdn.pixabay.com/download/audio/2022/12/15/audio_7b3a96e7f1.mp3" type="audio/mpeg" />
   </audio>
-
   <audio id="hoho" playsinline>
     <source src="https://cdn.pixabay.com/download/audio/2021/12/22/audio_3e3b9b1c7d.mp3" type="audio/mpeg" />
   </audio>
 
   <script src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js"></script>
   <script>
-    /* MAP */
     const map = L.map('map', { zoomControl: false }).setView([12.8797, 121.7740], 6);
     L.control.zoom({ position: 'bottomright' }).addTo(map);
+    L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png', { attribution: '© OpenStreetMap contributors' }).addTo(map);
 
-    L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png', {
-      attribution: '© OpenStreetMap contributors'
-    }).addTo(map);
-
-    /* Cooler animated Santa icon */
+    // Santa on his reindeer icon
     const santaIcon = L.icon({
-      iconUrl: 'https://media.giphy.com/media/3o7aD2saalBwwftBIY/giphy.gif',
+      iconUrl: 'https://i.imgur.com/UzfB0H1.gif', // Santa riding reindeer
       iconSize: [56, 56],
       iconAnchor: [28, 28]
     });
 
-    let santaMarker = L.marker([12.8797, 121.7740], { icon: santaIcon })
-      .addTo(map)
-      .bindPopup('🎅 Santa is VERY close!');
+    let santaMarker = L.marker([12.8797, 121.7740], { icon: santaIcon }).addTo(map).bindPopup('🎅 Santa is VERY close!');
 
     function moveNearUser(lat, lng) {
       const offset = () => (Math.random() - 0.5) * 0.04;
@@ -213,39 +203,25 @@
       showToast('🎁 Knock knock! Santa is nearby!');
     }
 
-    if (navigator.geolocation) {
-      navigator.geolocation.getCurrentPosition(pos => {
-        moveNearUser(pos.coords.latitude, pos.coords.longitude);
-      });
-    }
+    if (navigator.geolocation) { navigator.geolocation.getCurrentPosition(pos => moveNearUser(pos.coords.latitude, pos.coords.longitude)); }
 
-    /* ETA */
     function generateETA() {
       const now = new Date();
       const future = new Date(now.getTime() + Math.random() * 4 * 60 * 60 * 1000);
       eta.innerText = future.toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' });
     }
 
-    /* GAME */
     let score = 0;
-    function addPoints() {
-      score += Math.floor(Math.random() * 6) + 1;
-      score > 20 && showToast('🌟 Santa is SUPER proud of you!');
-      document.getElementById('score').innerText = `Score: ${score}`;
-    }
+    function addPoints() { score += Math.floor(Math.random() * 6) + 1; if(score>20) showToast('🌟 Santa is SUPER proud of you!'); document.getElementById('score').innerText = `Score: ${score}`; }
 
-    /* QUOTES */
     const quotes = [
       'Mabait ka ngayong taon. Proud si Santa sayo!',
       'Your kindness is the real gift 🎁',
       'You made people smile this year 😊',
       'Hindi lahat nakikita, pero ramdam ang kabutihan mo.'
     ];
-    function newQuote() {
-      quote.innerText = quotes[Math.floor(Math.random() * quotes.length)];
-    }
+    function newQuote() { quote.innerText = quotes[Math.floor(Math.random() * quotes.length)]; }
 
-    /* COUNTDOWN */
     function updateCountdown() {
       const now = new Date();
       const midnight = new Date();
@@ -253,61 +229,23 @@
       const diff = midnight - now;
       const h = Math.floor(diff / 3600000);
       const m = Math.floor((diff % 3600000) / 60000);
-      countdown.innerText = `${h}h ${m}m left`; 
+      countdown.innerText = `${h}h ${m}m left`;
     }
 
-    /* AUDIO (attempt autoplay; user tap fallback) */
     const music = document.getElementById('music');
     const ho = document.getElementById('hoho');
-
-    function tryAutoplay() {
-      music.volume = 0.6;
-      music.play().catch(() => {
-        showToast('🔊 Tap Music to enable sound');
-      });
-    }
-
+    function tryAutoplay() { music.volume = 0.6; music.play().catch(()=>showToast('🔊 Tap Music to enable sound')); }
     function toggleMusic() { music.paused ? music.play() : music.pause(); }
     function hohoho() { ho.play(); }
 
-    /* PRANK */
-    function robuxPrank() {
-      showToast('Pabili ka sa mama mo! 😂');
-      hohoho();
-    }
+    function robuxPrank() { showToast('Pabili ka sa mama mo! 😂'); hohoho(); }
+    function showToast(msg) { const t=document.getElementById('toast'); t.innerText=msg; t.style.display='block'; setTimeout(()=>t.style.display='none',3500); }
+    function copyLink() { navigator.clipboard.writeText(location.href); showToast('🎄 Link copied!'); }
 
-    /* TOAST */
-    function showToast(msg) {
-      const t = document.getElementById('toast');
-      t.innerText = msg;
-      t.style.display = 'block';
-      setTimeout(() => t.style.display = 'none', 3500);
-    }
+    function snow() { const s=document.createElement('div'); s.className='snowflake'; s.style.left=Math.random()*100+'vw'; s.style.animationDuration=4+Math.random()*5+'s'; s.innerText='❄'; document.body.appendChild(s); setTimeout(()=>s.remove(),9000); }
+    setInterval(snow,260);
 
-    /* SHARE */
-    function copyLink() {
-      navigator.clipboard.writeText(location.href);
-      showToast('🎄 Link copied!');
-    }
-
-    /* SNOW */
-    function snow() {
-      const s = document.createElement('div');
-      s.className = 'snowflake';
-      s.style.left = Math.random() * 100 + 'vw';
-      s.style.animationDuration = 4 + Math.random() * 5 + 's';
-      s.innerText = '❄';
-      document.body.appendChild(s);
-      setTimeout(() => s.remove(), 9000);
-    }
-    setInterval(snow, 260);
-
-    /* INIT */
-    generateETA();
-    newQuote();
-    updateCountdown();
-    setInterval(updateCountdown, 60000);
-    tryAutoplay();
+    generateETA(); newQuote(); updateCountdown(); setInterval(updateCountdown,60000); tryAutoplay();
   </script>
 </body>
 </html>
