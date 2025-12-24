@@ -3,13 +3,13 @@
 <head>
   <meta charset="UTF-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-  <title>Santa Tracker Philippines 🎅🇵🇭</title>
+  <title>Santa Tracker PH – Magical Edition 🎅✨</title>
   <link rel="stylesheet" href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css" />
   <style>
     body {
       margin: 0;
       font-family: system-ui, -apple-system, Segoe UI, Roboto, sans-serif;
-      background: #0b1d3a;
+      background: radial-gradient(circle at top, #123 0%, #08162d 60%);
       color: #fff;
     }
     header {
@@ -17,95 +17,170 @@
       text-align: center;
       background: linear-gradient(135deg, #c1121f, #780000);
     }
-    header h1 {
-      margin: 0;
-      font-size: 1.5rem;
+    header h1 { margin: 0; font-size: 1.5rem; }
+    header p { margin: 6px 0 0; font-size: 0.95rem; opacity: 0.95; }
+
+    #map { height: 55vh; width: 100%; }
+
+    .panel {
+      padding: 14px;
+      display: grid;
+      gap: 12px;
+      grid-template-columns: repeat(auto-fit, minmax(160px, 1fr));
     }
-    header p {
-      margin: 6px 0 0;
-      font-size: 0.95rem;
-      opacity: 0.9;
+
+    .card {
+      background: rgba(255,255,255,0.08);
+      border-radius: 14px;
+      padding: 14px;
+      text-align: center;
+      box-shadow: 0 10px 20px rgba(0,0,0,0.25);
+      backdrop-filter: blur(6px);
     }
-    #map {
-      height: calc(100vh - 120px);
-      width: 100%;
+
+    button {
+      padding: 10px 14px;
+      border-radius: 10px;
+      border: none;
+      cursor: pointer;
+      background: #198754;
+      color: #fff;
+      font-weight: 600;
     }
+
+    button.secondary { background: #0d6efd; }
+    button.warn { background: #ffc107; color: #000; }
+
     footer {
       padding: 10px;
       text-align: center;
       font-size: 0.85rem;
       background: #08162d;
     }
-    .share {
-      display: inline-block;
-      margin-top: 6px;
-      padding: 6px 12px;
-      background: #198754;
-      color: #fff;
-      border-radius: 6px;
-      cursor: pointer;
-      text-decoration: none;
-    }
+
+    .quote { font-style: italic; opacity: 0.95; }
   </style>
 </head>
 <body>
   <header>
-    <h1>🎅 Santa Tracker – Philippines</h1>
-    <p>Just for fun! Watch Santa travel around the Philippines delivering gifts 🎁</p>
+    <h1>🎅 Santa Tracker – Magical PH Edition</h1>
+    <p>Santa is near YOU! Interactive, fun, and just for joy 🎁</p>
   </header>
 
   <div id="map"></div>
 
+  <section class="panel">
+    <div class="card">
+      <h3>🎁 Gift ETA</h3>
+      <p id="eta">Calculating magic...</p>
+      <button onclick="generateETA()">Regenerate ETA</button>
+    </div>
+
+    <div class="card">
+      <h3>🌟 Good Kid Meter</h3>
+      <p id="score">Score: 0</p>
+      <button class="secondary" onclick="addPoints()">Be Extra Nice</button>
+    </div>
+
+    <div class="card">
+      <h3>💬 Santa Says</h3>
+      <p id="quote" class="quote"></p>
+      <button class="warn" onclick="newQuote()">New Message</button>
+    </div>
+
+    <div class="card">
+      <h3>🎶 Santa Sounds</h3>
+      <button onclick="toggleMusic()">Toggle Music</button><br /><br />
+      <button class="secondary" onclick="hohoho()">Ho Ho Ho!</button>
+    </div>
+  </section>
+
   <footer>
-    Share this tracker with friends 👇<br />
-    <span class="share" onclick="copyLink()">Copy Shareable Link</span>
+    Share the magic with friends 🎄<br />
+    <button onclick="copyLink()">Copy Shareable Link</button>
   </footer>
+
+  <audio id="music" loop>
+    <source src="https://cdn.pixabay.com/download/audio/2022/12/15/audio_7b3a96e7f1.mp3?filename=christmas-village-126868.mp3" type="audio/mpeg" />
+  </audio>
+
+  <audio id="hoho">
+    <source src="https://cdn.pixabay.com/download/audio/2021/12/22/audio_3e3b9b1c7d.mp3?filename=santa-ho-ho-ho-12469.mp3" type="audio/mpeg" />
+  </audio>
 
   <script src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js"></script>
   <script>
-    // Initialize map centered on the Philippines
     const map = L.map('map').setView([12.8797, 121.7740], 6);
-
     L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png', {
       attribution: '© OpenStreetMap contributors'
     }).addTo(map);
 
-    // Santa icon
     const santaIcon = L.icon({
       iconUrl: 'https://cdn-icons-png.flaticon.com/512/3468/3468377.png',
       iconSize: [48, 48],
       iconAnchor: [24, 24]
     });
 
-    // Sample route around the Philippines (for fun only)
-    const santaRoute = [
-      [14.5995, 120.9842], // Manila
-      [15.4828, 120.7120], // Pampanga
-      [16.4023, 120.5960], // Baguio
-      [13.7565, 121.0583], // Batangas
-      [10.3157, 123.8854], // Cebu
-      [9.7392, 118.7353],  // Palawan
-      [8.4542, 124.6319],  // Cagayan de Oro
-      [7.1907, 125.4553]   // Davao
+    let santaMarker = L.marker([12.8797, 121.7740], { icon: santaIcon })
+      .addTo(map)
+      .bindPopup('🎅 Santa is close to you!');
+
+    function moveNearUser(lat, lng) {
+      const offset = () => (Math.random() - 0.5) * 0.1;
+      const newLat = lat + offset();
+      const newLng = lng + offset();
+      santaMarker.setLatLng([newLat, newLng]);
+      map.setView([newLat, newLng], 13);
+      santaMarker.openPopup();
+    }
+
+    if (navigator.geolocation) {
+      navigator.geolocation.getCurrentPosition(pos => {
+        moveNearUser(pos.coords.latitude, pos.coords.longitude);
+      }, () => {
+        // fallback PH center
+      });
+    }
+
+    function generateETA() {
+      const now = new Date();
+      const future = new Date(now.getTime() + Math.random() * (6 * 60 * 60 * 1000));
+      document.getElementById('eta').innerText = future.toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' });
+    }
+
+    let score = 0;
+    function addPoints() {
+      score += Math.floor(Math.random() * 5) + 1;
+      document.getElementById('score').innerText = `Score: ${score}`;
+    }
+
+    const quotes = [
+      "You’ve been kind, patient, and strong this year.",
+      "Santa is proud of how you never gave up.",
+      "Your good heart is your greatest gift.",
+      "You made the world better just by being you.",
+      "Kindness like yours never goes unnoticed."
     ];
 
-    let index = 0;
+    function newQuote() {
+      document.getElementById('quote').innerText = quotes[Math.floor(Math.random() * quotes.length)];
+    }
 
-    const santaMarker = L.marker(santaRoute[0], { icon: santaIcon })
-      .addTo(map)
-      .bindPopup('🎅 Santa is delivering gifts here!');
-
-    // Move Santa every 3 seconds
-    setInterval(() => {
-      index = (index + 1) % santaRoute.length;
-      santaMarker.setLatLng(santaRoute[index]);
-      santaMarker.openPopup();
-    }, 3000);
+    const music = document.getElementById('music');
+    const ho = document.getElementById('hoho');
+    function toggleMusic() {
+      music.paused ? music.play() : music.pause();
+    }
+    function hohoho() { ho.play(); }
 
     function copyLink() {
       navigator.clipboard.writeText(window.location.href);
-      alert('🎄 Link copied! Share it with everyone.');
+      alert('🎄 Link copied! Spread the joy!');
     }
+
+    // Init
+    generateETA();
+    newQuote();
   </script>
 </body>
 </html>
