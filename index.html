@@ -1,0 +1,111 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Santa Tracker Philippines 🎅🇵🇭</title>
+  <link rel="stylesheet" href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css" />
+  <style>
+    body {
+      margin: 0;
+      font-family: system-ui, -apple-system, Segoe UI, Roboto, sans-serif;
+      background: #0b1d3a;
+      color: #fff;
+    }
+    header {
+      padding: 16px;
+      text-align: center;
+      background: linear-gradient(135deg, #c1121f, #780000);
+    }
+    header h1 {
+      margin: 0;
+      font-size: 1.5rem;
+    }
+    header p {
+      margin: 6px 0 0;
+      font-size: 0.95rem;
+      opacity: 0.9;
+    }
+    #map {
+      height: calc(100vh - 120px);
+      width: 100%;
+    }
+    footer {
+      padding: 10px;
+      text-align: center;
+      font-size: 0.85rem;
+      background: #08162d;
+    }
+    .share {
+      display: inline-block;
+      margin-top: 6px;
+      padding: 6px 12px;
+      background: #198754;
+      color: #fff;
+      border-radius: 6px;
+      cursor: pointer;
+      text-decoration: none;
+    }
+  </style>
+</head>
+<body>
+  <header>
+    <h1>🎅 Santa Tracker – Philippines</h1>
+    <p>Just for fun! Watch Santa travel around the Philippines delivering gifts 🎁</p>
+  </header>
+
+  <div id="map"></div>
+
+  <footer>
+    Share this tracker with friends 👇<br />
+    <span class="share" onclick="copyLink()">Copy Shareable Link</span>
+  </footer>
+
+  <script src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js"></script>
+  <script>
+    // Initialize map centered on the Philippines
+    const map = L.map('map').setView([12.8797, 121.7740], 6);
+
+    L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png', {
+      attribution: '© OpenStreetMap contributors'
+    }).addTo(map);
+
+    // Santa icon
+    const santaIcon = L.icon({
+      iconUrl: 'https://cdn-icons-png.flaticon.com/512/3468/3468377.png',
+      iconSize: [48, 48],
+      iconAnchor: [24, 24]
+    });
+
+    // Sample route around the Philippines (for fun only)
+    const santaRoute = [
+      [14.5995, 120.9842], // Manila
+      [15.4828, 120.7120], // Pampanga
+      [16.4023, 120.5960], // Baguio
+      [13.7565, 121.0583], // Batangas
+      [10.3157, 123.8854], // Cebu
+      [9.7392, 118.7353],  // Palawan
+      [8.4542, 124.6319],  // Cagayan de Oro
+      [7.1907, 125.4553]   // Davao
+    ];
+
+    let index = 0;
+
+    const santaMarker = L.marker(santaRoute[0], { icon: santaIcon })
+      .addTo(map)
+      .bindPopup('🎅 Santa is delivering gifts here!');
+
+    // Move Santa every 3 seconds
+    setInterval(() => {
+      index = (index + 1) % santaRoute.length;
+      santaMarker.setLatLng(santaRoute[index]);
+      santaMarker.openPopup();
+    }, 3000);
+
+    function copyLink() {
+      navigator.clipboard.writeText(window.location.href);
+      alert('🎄 Link copied! Share it with everyone.');
+    }
+  </script>
+</body>
+</html>
